@@ -1,0 +1,35 @@
+`timescale 1ns/1ps
+
+module digital_time_controller #(
+    parameter N = 8
+)(
+    input  wire             clk,
+    input  wire             rst_n,
+    input  wire             enable,
+    input  wire             load,
+    input  wire [N-1:0]     load_value,
+    output reg  [N-1:0]     count,
+    output reg              timeout
+);
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            count   <= {N{1'b0}};
+            timeout <= 1'b0;
+        end else begin
+            timeout <= 1'b0; // default
+
+            if (load) begin
+                count <= load_value;
+            end
+            else if (enable) begin
+                if (count != 0) begin
+                    count <= count - 1'b1;
+                    if (count == 1)
+                        timeout <= 1'b1; // asserted when reaching zero
+                end
+            end
+        end
+    end
+
+endmodule
